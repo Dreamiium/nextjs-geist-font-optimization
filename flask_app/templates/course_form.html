@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Edit Course' if action == 'edit' else 'Add New Course' }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-white text-center py-4">
+                <h2 class="mb-0">{{ 'Edit Course' if action == 'edit' else 'Add New Course' }}</h2>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    <!-- Course Details -->
+                    <div class="mb-4">
+                        <label for="name" class="form-label">Course Name</label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="name" 
+                               name="name" 
+                               value="{{ course.name if course else '' }}"
+                               required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="category_id" class="form-label">Category</label>
+                        <select class="form-select" id="category_id" name="category_id" required>
+                            <option value="">Select a category</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}" 
+                                    {% if course and course.category_id == category.id %}selected{% endif %}>
+                                {{ category.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Weekly Enrollments -->
+                    <h4 class="mb-3">Weekly Enrollments</h4>
+                    <div class="row g-3 mb-4">
+                        {% for week in range(1, 4) %}
+                        <div class="col-md-4">
+                            <label for="week_{{ week }}" class="form-label">Week {{ week }}</label>
+                            {% if course %}
+                                {% set enrollment = course.enrollments|selectattr('period_type', 'equalto', 'week')|selectattr('period_number', 'equalto', week)|first %}
+                            {% endif %}
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="week_{{ week }}" 
+                                   name="week_{{ week }}"
+                                   value="{{ enrollment.student_count if enrollment else '0' }}"
+                                   min="0">
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Monthly Enrollments -->
+                    <h4 class="mb-3">Monthly Enrollments</h4>
+                    <div class="row g-3 mb-4">
+                        {% for month in range(1, 5) %}
+                        <div class="col-md-3">
+                            <label for="month_{{ month }}" class="form-label">Month {{ month }}</label>
+                            {% if course %}
+                                {% set enrollment = course.enrollments|selectattr('period_type', 'equalto', 'month')|selectattr('period_number', 'equalto', month)|first %}
+                            {% endif %}
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="month_{{ month }}" 
+                                   name="month_{{ month }}"
+                                   value="{{ enrollment.student_count if enrollment else '0' }}"
+                                   min="0">
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('admin') }}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            {{ 'Update Course' if action == 'edit' else 'Add Course' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add form validation if needed
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(event) {
+        const categoryId = document.getElementById('category_id').value;
+        if (!categoryId) {
+            event.preventDefault();
+            alert('Please select a category');
+        }
+    });
+});
+</script>
+{% endblock %}
