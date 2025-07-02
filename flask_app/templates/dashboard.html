@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block title %}Course Dashboard{% endblock %}
+
+{% block extra_head %}
+<style>
+.chart-container {
+    height: 300px;
+    margin-top: 2rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center">
+                <h1 class="display-5 mb-4">Course Statistics Dashboard</h1>
+                <p class="lead text-muted">Overview of course enrollments and statistics</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% for category in categories %}
+<div class="card mb-4">
+    <div class="card-header bg-white">
+        <h3 class="mb-0">{{ category.name }}</h3>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Course Name</th>
+                        <th>Week 1</th>
+                        <th>Week 2</th>
+                        <th>Week 3</th>
+                        <th>Month 2</th>
+                        <th>Month 3</th>
+                        <th>Month 4</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for course in category.courses %}
+                    <tr>
+                        <td>{{ course.name }}</td>
+                        {% for week in range(1, 4) %}
+                        <td>
+                            {% set week_enrollment = course.enrollments|selectattr('period_type', 'equalto', 'week')|selectattr('period_number', 'equalto', week)|list %}
+                            {% if week_enrollment %}
+                                {{ week_enrollment[0].student_count }}
+                            {% else %}
+                                0
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                        {% for month in range(2, 5) %}
+                        <td>
+                            {% set month_enrollment = course.enrollments|selectattr('period_type', 'equalto', 'month')|selectattr('period_number', 'equalto', month)|list %}
+                            {% if month_enrollment %}
+                                {{ month_enrollment[0].student_count }}
+                            {% else %}
+                                0
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="chart-{{ category.id }}" 
+                    data-chart='{{ chart_data[category.id]|tojson|safe }}'></canvas>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('canvas[data-chart]').forEach(function(canvas) {
+        const ctx = canvas.getContext('2d');
+        const data = JSON.parse(canvas.dataset.chart);
+        
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.courses,
+                datasets: [{
+                    label: 'Week 1',
+                    data: data.week1_data,
+                    backgroundColor: '#3b82f6',
+                    borderWidth: 0
+                }, {
+                    label: 'Month 2',
+                    data: data.month2_data,
+                    backgroundColor: '#ef4444',
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: data.name,
+                        font: { size: 16 }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Students' }
+                    }
+                }
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
