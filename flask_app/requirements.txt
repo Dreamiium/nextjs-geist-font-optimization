@@ -1,0 +1,8 @@
+Flask==2.2.2
+Flask-SQLAlchemy==3.0.2
+pandas==1.5.3
+numpy==1.23.5
+openpyxl==3.0.10
+WTForms==3.0.1
+Flask-WTF==1.1.1
+Werkzeug==2.2.2
